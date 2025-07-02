@@ -43,10 +43,8 @@
             }
         }
     </style>
-    <!-- 引入高德地图JS API -->
-    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=您的高德API密钥"></script>
-    <!-- 引入3D建筑物图层插件 -->
-    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=您的高德API密钥&plugin=AMap.Buildings"></script>
+    <!-- 引入高德地图JS API及3D建筑物插件 -->
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=114ed576e75cdd3e45d554742e2cf553&plugin=AMap.Buildings"></script>
     <!-- 引入fireworks-js库 -->
     <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.0/dist/index.umd.min.js"></script>
 </head>
@@ -58,6 +56,7 @@
     <script>
         // 地图配置
         const MAP_CONFIG = {
+            apiKey: '114ed576e75cdd3e45d554742e2cf553',
             center: [118.796875, 32.060255], // 南京中心点坐标
             zoom: 14, // 默认缩放级别
             pitch: 45, // 倾斜角度
