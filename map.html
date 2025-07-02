@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <title>高德地图多边形示例</title>
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;}
+        html, body {height: 100%;}
+        #container {width: 100%; height: 100vh; position: relative;}
+        @keyframes spin {to {transform: rotate(360deg);}}
+
+    </style>
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=114ed576e75cdd3e45d554742e2cf553"></script>
+</head>
+<body>
+    <div id="container">
+            <div id="map-loading" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#fff;display:flex;justify-content:center;align-items:center;z-index:100;">
+                <div style="text-align:center;">
+                    <div style="width:40px;height:40px;border:4px solid #00b0ff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px;"></div>
+                    <p>地图加载中...</p>
+                </div>
+            </div>
+        </div>
+    <script type="text/javascript">
+        // 配置参数
+        const MAP_CONFIG = {
+            apiKey: '您的高德API密钥', // 替换为您的高德API密钥
+            containerId: 'container',
+            center: [118.767413, 32.041544], // 南京市中心经纬度
+            zoom: 13,
+            rectangle: {
+                centerOffset: 0.01, // 矩形中心点偏移量
+                shadowOffset: [0.001, -0.001] // 阴影偏移量
+            }
+        };
+
+/**
+ * 初始化地图
+ * @returns {AMap.Map|null} 地图实例或null（加载失败时）
+ */
+        function initMap() {
+            // 检查高德地图API是否加载
+            if (!window.AMap) {
+                console.error('高德地图API加载失败');
+                return;
+            }
+
+            // 创建地图实例
+            const map = new AMap.Map(MAP_CONFIG.containerId, {
+            zoom: MAP_CONFIG.zoom,
+            center: MAP_CONFIG.center,
+            resizeEnable: true, // 启用地图自适应容器大小
+            viewMode: '3D',       // 启用3D视图
+            rotationEnable: true, // 允许旋转
+            pitch: 45             // 设置初始倾斜角度
+        });
+
+        // 加载3D建筑物图层
+        map.plugin(['AMap.Buildings'], function() {
+            var buildings = new AMap.Buildings({
+                zooms: [16, 20],     // 显示3D建筑物的缩放级别范围
+                heightFactor: 2      // 建筑物高度倍数
+            });
+            buildings.setMap(map);
+        });
+
+            // 隐藏加载提示
+            map.on('complete', () => {
+                const loading = document.getElementById('map-loading');
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+            });
+
+            // 生成矩形路径
+            const rectanglePath = generateRectanglePath(
+                MAP_CONFIG.center,
+                MAP_CONFIG.rectangle.centerOffset
+            );
+
+            // 创建3D效果矩形
+            create3DRectangle(map, rectanglePath);
+
+            return map;
+        }
+
+/**
+ * 生成矩形路径
+ * @param {[number, number]} center - 中心点经纬度 [经度, 纬度]
+ * @param {number} offset - 矩形半边长的经纬度偏移量
+ * @returns {Array<[number, number]>} 矩形四个顶点的经纬度数组
+ */
+        function generateRectanglePath(center, offset) {
+            const [lng, lat] = center;
+            return [
+                [lng - offset, lat - offset],
+                [lng + offset, lat - offset],
+                [lng + offset, lat + offset],
+                [lng - offset, lat + offset]
+            ];
+        }
+
+/**
+ * 创建带3D效果的矩形（主矩形+阴影）
+ * @param {AMap.Map} map - 地图实例
+ * @param {Array<[number, number]>} path - 矩形顶点坐标数组
+ */
+        function create3DRectangle(map, path) {
+            // 创建阴影多边形
+            const shadowPath = path.map(point => [
+                point[0] + MAP_CONFIG.rectangle.shadowOffset[0],
+                point[1] + MAP_CONFIG.rectangle.shadowOffset[1]
+            ]);
+
+            const shadowPolygon = new AMap.Polygon({
+                path: shadowPath,
+                fillColor: '#000000',
+                fillOpacity: 0.2,
+                strokeWeight: 0
+            });
+
+            // 创建主多边形
+            const polygon = new AMap.Polygon({
+                path: path,
+                fillColor: '#00b0ff',
+                fillOpacity: 0.6,
+                strokeColor: '#0066cc',
+                strokeWeight: 4,
+                strokeOpacity: 1,
+                strokeStyle: 'dashed',
+                dashOffset: 5
+            });
+
+            // 添加信息窗口
+            const infoWindow = new AMap.InfoWindow({
+                content: '<div style="width:200px;padding:10px;">南京区域</div>',
+                offset: new AMap.Pixel(0, -30)
+            });
+
+            // 绑定点击事件
+            polygon.on('click', function(e) {
+                infoWindow.open(map, e.lnglat);
+            });
+
+            // 添加到地图
+            map.add([shadowPolygon, polygon]);
+        }
+
+        // 页面加载完成后初始化地图
+        window.addEventListener('DOMContentLoaded', initMap);
+    </script>
+</body>
+</html>
